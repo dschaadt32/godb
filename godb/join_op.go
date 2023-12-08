@@ -1,5 +1,7 @@
 package godb
 
+import "sync"
+
 type EqualityJoin[T comparable] struct {
 	// Expressions that when applied to tuples from the left or right operators,
 	// respectively, return the value of the left or right side of the join
@@ -51,8 +53,8 @@ func NewStringJoin(left Operator, leftField Expr, right Operator, rightField Exp
 // the union of the fields in the descriptors of the left and right operators.
 // HINT: use the merge function you implemented for TupleDesc in lab1
 func (hj *EqualityJoin[T]) Descriptor() *TupleDesc {
-	// TODO: some code goes here
-	return nil
+	return (*hj.left).Descriptor().merge((*hj.right).Descriptor())
+
 }
 
 // Join operator implementation.  This function should iterate over the results
@@ -70,7 +72,168 @@ func (hj *EqualityJoin[T]) Descriptor() *TupleDesc {
 // out.  To pass this test, you will need to use something other than a nested
 // loops join.
 func (joinOp *EqualityJoin[T]) Iterator(tid TransactionID) (func() (*Tuple, error), error) {
+	left, err := joinOp.leftIter(tid)
+	if err != nil {
+		return nil, err
+	}
+	right, err := joinOp.rightIter(tid)
+	if err != nil {
+		return nil, err
+	}
 
-	// TODO: some code goes here
-	return nil, nil
+	mu := new(sync.Mutex) // Mutex for synchronization
+	buffer := []*Tuple{}
+	// pos := 0
+	go func() error {
+		for {
+			leftTup, err := left()
+			if err != nil {
+				return err
+			}
+			if leftTup == nil {
+				// mu.Lock()
+				// buffer[pos] = nil
+				mu.Lock()
+				buffer = append(buffer, nil)
+				mu.Unlock()
+				// pos++
+				// mu.Unlock()
+				return nil
+			}
+
+			func(leftTup *Tuple) error {
+				for {
+					rightTup, err := right()
+					if err != nil || rightTup == nil {
+						right, err = joinOp.rightIter(tid)
+						if err != nil {
+							return err
+						}
+						break
+					}
+
+					leftVal, err := joinOp.leftField.EvalExpr(leftTup)
+					if err != nil {
+						return err
+					}
+					leftFieldVal := joinOp.getter(leftVal)
+
+					rightVal, err := joinOp.rightField.EvalExpr(rightTup)
+					if err != nil {
+						return err
+					}
+					rightFieldVal := joinOp.getter(rightVal)
+
+					if leftFieldVal == rightFieldVal {
+						mu.Lock()
+						// buffer[pos] = joinTuples(leftTup, rightTup)
+						// pos++
+						buffer = append(buffer, joinTuples(leftTup, rightTup))
+						mu.Unlock()
+					}
+				}
+				return nil
+			}(leftTup)
+
+		}
+		return nil
+	}()
+
+	pos2 := 0
+	return func() (*Tuple, error) {
+		for {
+
+			if pos2 < len(buffer) {
+				mu.Lock()
+				tup := buffer[pos2]
+				mu.Unlock()
+				// possibly remove from the end for time complexity, have a pointer to the position in the buffer to return
+				pos2++
+				//
+
+				return tup, nil
+			}
+
+		}
+
+	}, nil
 }
+
+func (joinOp *EqualityJoin[T]) leftIter(tid TransactionID) (func() (*Tuple, error), error) {
+	return (*joinOp.left).Iterator(tid)
+}
+func (joinOp *EqualityJoin[T]) rightIter(tid TransactionID) (func() (*Tuple, error), error) {
+	return (*joinOp.right).Iterator(tid)
+}
+
+// right, err := joinOp.rightIter(tid)
+// if err != nil {
+// 	return nil, err
+// }
+// left, err := joinOp.leftIter(tid)
+
+// if err != nil {
+// 	return nil, err
+// }
+// leftTup, err := left()
+// if err != nil {
+// 	//fmt.Printf("in err under left iter")
+// 	return nil, err
+// }
+
+// buffer := []*Tuple{}
+// for {
+// 	//fmt.Printf("in left")
+
+// 	if leftTup == nil { // out of tuples
+// 		buffer = append(buffer, nil)
+// 		//return nil, nil
+// 		break
+// 	}
+// 	for {
+// 		rightTup, err := right()
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		if rightTup == nil { // out of tuples
+// 			right, err = joinOp.rightIter(tid) // reset
+
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			leftTup, err = left()
+
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			break // get next tuple from left
+// 		}
+// 		// else actually do the join
+// 		leftVal, err := joinOp.leftField.EvalExpr(leftTup)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		leftFieldVal := joinOp.getter(leftVal)
+
+// 		rightVal, err := joinOp.rightField.EvalExpr(rightTup)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		rightFieldVal := joinOp.getter(rightVal)
+// 		//fmt.Printf("left = %T, right = %T\n", (leftFieldVal), (rightFieldVal))
+// 		if leftFieldVal == rightFieldVal {
+// 			buffer = append(buffer, joinTuples(leftTup, rightTup))
+
+// 		}
+// 	}
+// }
+
+// return func() (*Tuple, error) {
+// 	for {
+// 		if len(buffer) != 0 {
+// 			tup := buffer[0]
+// 			remove(buffer, 0)
+// 			return tup, nil
+// 		}
+// 	}
+// }, nil

@@ -9,13 +9,17 @@ func CheckIfOutputMatches(f func() (*Tuple, error), ts []*Tuple) bool {
 	n := 0
 	for {
 		t1, _ := f()
+		//fmt.Println(t1)
 		if t1 == nil {
 			break
 		}
-		//		fmt.Printf("%v\n", t1)
+
 		got := false
+		//fmt.Println(ts)
 		for _, t2 := range ts {
+
 			if t1.equals(t2) {
+
 				got = true
 				break
 			}

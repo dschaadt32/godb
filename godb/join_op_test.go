@@ -1,6 +1,7 @@
 package godb
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -49,7 +50,7 @@ func TestJoin(t *testing.T) {
 		} else if t.equals(outT2) {
 			cntOut2++
 		}
-		//fmt.Printf("got tuple %v: %v\n", cnt, t)
+		fmt.Printf("got tuple %v: %v\n", cnt, t)
 		cnt++
 	}
 	if cnt != 5 {

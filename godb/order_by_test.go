@@ -1,6 +1,7 @@
 package godb
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
@@ -20,21 +21,25 @@ func TestOrderBy(t *testing.T) {
 	for i, f := range t1.Desc.Fields {
 		exprs[i] = &FieldExpr{f}
 	}
+
 	oby, err := NewOrderBy(exprs, hf, bs)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}
 
 	iter, _ := oby.Iterator(tid)
+
 	if iter == nil {
 		t.Fatalf("iter was nil")
 	}
 	var last string
 	for {
 		tup, _ := iter()
+
 		if tup == nil {
 			break
 		}
+		fmt.Println(tup.Fields[0].(StringField).Value)
 		fval := tup.Fields[0].(StringField).Value
 		if last != "" {
 			if fval > last {
@@ -61,6 +66,7 @@ func TestOrderBy(t *testing.T) {
 		if tup == nil {
 			break
 		}
+		//fmt.Println(tup.Fields[0].(StringField).Value)
 		fval := tup.Fields[0].(StringField).Value
 		if last != "" {
 			if fval < last {
@@ -147,11 +153,15 @@ func TestMultiFieldOrderBy(t *testing.T) {
 			result = append(result, *tup)
 
 		}
+		//fmt.Println(len(expected))
 		if len(result) != len(expected) {
+
 			t.Fatalf("order by test %d produced different number of results than expected (%d got, expected %d)", i, len(result), len(expected))
 		}
 		for j, tup := range result {
+			//fmt.Println(expected[j].Fields, tup.Fields)
 			if !tup.equals(&expected[j]) {
+
 				t.Fatalf("order by test %d got wrong tuple at position %d (expected %v, got %v)", i, j, expected[j].Fields, tup.Fields)
 			}
 		}

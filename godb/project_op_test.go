@@ -26,6 +26,7 @@ func TestProject(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 	if len(tup.Fields) != 1 || tup.Desc.Fields[0].Fname != "outf" {
+		//println(tup.Desc.Fields[0].Fname)
 		t.Errorf("invalid output tuple")
 	}
 

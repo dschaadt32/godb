@@ -28,7 +28,7 @@ func TestReadWriteDeadlock(t *testing.T) {
 
 	for {
 		time.Sleep(POLL_INTERVAL)
-
+		println("inside test case")
 		if lg1Write.acquired() && lg2Write.acquired() {
 			t.Errorf("Should not both get write lock")
 		}

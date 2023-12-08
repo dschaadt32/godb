@@ -55,7 +55,7 @@ type DBFile interface {
 	//methods used by buffer pool to manage retrieval of pages
 	readPage(pageNo int) (*Page, error)
 	flushPage(page *Page) error
-	pageKey(pgNo int) any //uint64
+	pageKey(pgNo int) heapHash //uint64
 
 	Operator
 }

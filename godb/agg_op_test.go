@@ -160,6 +160,9 @@ func TestGbyCountAgg(t *testing.T) {
 		nil,
 	}
 	ts := []*Tuple{&outt1, &outt2}
+	//fmt.Println(iter())
+	//fmt.Println(iter())
+
 	match := CheckIfOutputMatches(iter, ts)
 	if !match {
 		t.Fail()
@@ -200,6 +203,7 @@ func TestGbySumAgg(t *testing.T) {
 		}, nil,
 	}
 	ts := []*Tuple{&outt1, &outt2}
+	//fmt.Println(ts)
 	match := CheckIfOutputMatches(iter, ts)
 	if !match {
 		t.Fail()

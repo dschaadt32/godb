@@ -70,6 +70,7 @@ func testLimitCount(t *testing.T, n int) {
 		cnt++
 	}
 	if cnt != n {
+		println(cnt, n)
 		t.Errorf("unexpected number of results")
 	}
 

@@ -1,0 +1,14 @@
+You must submit your code (see below) as well as a short (2 pages, maximum) writeup describing your approach. This writeup should:
+
+Describe any design decisions you made, including your choice of join and aggregate operator implementation. If you used something other than a nested-loops join, describe the tradeoffs of the algorithm you chose. If you implemented support for distinct in project_op.go, describe how you implemented it.
+
+
+
+Discuss and justify any changes you made to the API.
+    No changes to the API
+
+Describe any missing or incomplete elements of your code.
+    The code is iffy on passing the largest test cases, I think it is only a problem of speed and not a race condition (of course it's a race condition but the implementation is right, it does not give incorrect answer, it just takes too long)
+
+Describe how long you spent on the lab, and whether there was anything you found particularly difficult or confusing.
+    12 hours
